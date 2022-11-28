@@ -17,7 +17,7 @@ from werkzeug.utils import secure_filename
 def create_bulk_crystal(name, size, round="up"):
     """Create a bulk crystal from a spacegroup description.
 
-    If a file `crystals.py` is found in the local directory it gets 
+    If a file `crystals.py` is found in the local directory it gets
     imported. The file should have the same structure as the internal
     `crystals.py` document. This file takes precendence over the internal
     data base.
@@ -38,11 +38,15 @@ def create_bulk_crystal(name, size, round="up"):
         pass
 
     crystal = crystals[name]
-    a, b, c, alpha, beta, gamma = [crystal[i] for i in ["a", "b", "c", "alpha", "beta", "gamma"]]
+    a, b, c, alpha, beta, gamma = [crystal[i]
+                                   for i in ["a", "b", "c", "alpha", "beta", "gamma"]]
     lx, ly, lz = size[0], size[1], size[2]
 
     # cellpar = [a, b, c, alpha, beta, gamma]
-    repeats = [lx/a, ly/b/np.sin(np.radians(gamma)), lz/c/np.sin(np.radians(alpha))/np.sin(np.radians(beta))]
+    repeats = [
+        lx / a,
+        ly / b / np.sin(np.radians(gamma)),
+        lz / c / np.sin(np.radians(alpha)) / np.sin(np.radians(beta))]
     if round == "up":
         repeats = [int(np.ceil(i)) for i in repeats]
     elif round == "down":
@@ -52,13 +56,20 @@ def create_bulk_crystal(name, size, round="up"):
     else:
         raise ValueError
     myCrystal = ase.spacegroup.crystal(
-                    crystal["elements"],
-                    crystal["positions"],
-                    spacegroup = crystal["spacegroup"],
-                    cellpar = [crystal[i] for i in ["a", "b", "c", "alpha", "beta", "gamma"]],
-                    size=repeats)
+        crystal["elements"],
+        crystal["positions"],
+        spacegroup=crystal["spacegroup"],
+        cellpar=[
+            crystal[i] for i in [
+                "a",
+                "b",
+                "c",
+                "alpha",
+                "beta",
+                "gamma"]],
+        size=repeats)
 
-    ###############################################################################
+    ##########################################################################
     # Creating a Lammps prism and then recreating the ase cell is necessary
     # to avoid flipping of the simulation cell when outputing the lammps data file
     # By making the transformation here, what we see in the lammps output is the same as
@@ -79,7 +90,7 @@ def create_bulk_crystal(name, size, round="up"):
 
     myCrystal.set_cell(cell)
     myCrystal.wrap()
-    ##################################################################################
+    ##########################################################################
     return myCrystal
 
 
@@ -136,7 +147,9 @@ def fetch_system_from_url(url, type_mapping=None):
     total_length = int(r.headers.get('content-length'))
     print(f"Downloading data file {url}")
     chunk_size = 4096
-    for chunk in progress.bar(r.iter_content(chunk_size=chunk_size, decode_unicode=True), expected_size=(total_length/chunk_size) + 1):
+    for chunk in progress.bar(
+            r.iter_content(chunk_size=chunk_size, decode_unicode=True),
+            expected_size=(total_length / chunk_size) + 1):
         if chunk:
             f.write(chunk)
             f.flush()
@@ -186,6 +199,7 @@ def read_data(filename, type_mapping=None, style="atomic"):
         atoms.set_atomic_numbers(type_copy)
     return atoms
 
+
 def pack_water(atoms=None, nummol=None, volume=None, density=0.997,
                geometry=None, side='in', pbc=0.0, tolerance=2.0):
     """Pack water molecules into voids at a given volume defined by a geometry.
@@ -216,8 +230,8 @@ def pack_water(atoms=None, nummol=None, volume=None, density=0.997,
         raise ValueError("Either volume or the number of molecules needed")
 
     if volume is not None:
-        V_per_water = 29.9796/density
-        nummol = int(volume/V_per_water)
+        V_per_water = 29.9796 / density
+        nummol = int(volume / V_per_water)
 
     format_s, format_v = "pdb", "proteindatabank"
     side += "side"
@@ -226,13 +240,15 @@ def pack_water(atoms=None, nummol=None, volume=None, density=0.997,
         raise ValueError("Either atoms or geometry has to be given")
     elif geometry is None:
         # The default water geometry is a box which capsules the solid
-        if type(pbc) is list or type(pbc) is tuple:
+        if isinstance(pbc, list) or isinstance(pbc, tuple):
             pbc = np.array(pbc)
 
         cell = atoms.cell
         if cell.orthorhombic:
             box_length = cell.lengths()
-            geometry = BoxGeometry(center=box_length/2, length=box_length - pbc)
+            geometry = BoxGeometry(
+                center=box_length / 2,
+                length=box_length - pbc)
         else:
             geometry = PlaneBoundTriclinicGeometry(cell, pbc=pbc)
     else:
@@ -270,8 +286,9 @@ def pack_water(atoms=None, nummol=None, volume=None, density=0.997,
         # Run packmol input script
         try:
             os.system("packmol < input.inp")
-        except:
-            raise OSError("packmol is not found. For installation instructions, \
+        except BaseException:
+            raise OSError(
+                "packmol is not found. For installation instructions, \
                            see http://m3g.iqm.unicamp.br/packmol/download.shtml.")
 
         # Read packmol outfile
@@ -289,7 +306,16 @@ def pack_water(atoms=None, nummol=None, volume=None, density=0.997,
     return water
 
 
-def write(atoms, filename, bond_specs=None, atom_style="molecular", size=(640, 480), camera_dir=(2, 1, -1), viewport_type="perspective", atom_radii=None, **ovito_export_file_kwargs):
+def write(
+    atoms,
+    filename,
+    bond_specs=None,
+    atom_style="molecular",
+    size=(640, 480),
+        camera_dir=(2, 1, -1),
+        viewport_type="perspective",
+        atom_radii=None,
+        **ovito_export_file_kwargs):
     """Write atoms to lammps data file
 
     :param atoms: The atoms object to write to file
@@ -302,7 +328,7 @@ def write(atoms, filename, bond_specs=None, atom_style="molecular", size=(640, 4
     import os
     suffix = os.path.splitext(filename)[1]
 
-    if not suffix in [".data", ".png"]:
+    if suffix not in [".data", ".png"]:
         raise ValueError(f"Invalid file format {suffix}")
 
     import tempfile
@@ -314,7 +340,7 @@ def write(atoms, filename, bond_specs=None, atom_style="molecular", size=(640, 4
         symbols = list(Formula(atoms.get_chemical_formula()).count().keys())
         symbols_dict = {}
         for i, symbol in enumerate(symbols):
-            symbols_dict[symbol] = i+1
+            symbols_dict[symbol] = i + 1
         atoms.write(
             os.path.join(
                 tmp_dir,
@@ -337,21 +363,26 @@ def write(atoms, filename, bond_specs=None, atom_style="molecular", size=(640, 4
             types.type_by_id(i).name = symbol
             types.type_by_id(i).load_defaults()
 
-
-        if not atom_radii is None:
+        if atom_radii is not None:
             types = pipeline.source.data.particles.particle_types
             for pair in atom_radii:
                 types.type_by_id(symbols_dict[pair[0]]).radius = pair[1]
 
-        # Accept a single tuple not contained in a list if there is only one bond type.
-        if not bond_specs is None:
-            bondsmodifier = CreateBondsModifier(mode = CreateBondsModifier.Mode.Pairwise)
-            if not isinstance(bond_specs, list) and isinstance(bond_specs, tuple):
+        # Accept a single tuple not contained in a list if there is only one
+        # bond type.
+        if bond_specs is not None:
+            bondsmodifier = CreateBondsModifier(
+                mode=CreateBondsModifier.Mode.Pairwise)
+            if not isinstance(
+                    bond_specs,
+                    list) and isinstance(
+                    bond_specs,
+                    tuple):
                 bond_specs = [bond_specs]
             for element in bond_specs:
-                bondsmodifier.set_pairwise_cutoff(  symbols_dict[element[0]],
-                                                    symbols_dict[element[1]],
-                                                    element[2])
+                bondsmodifier.set_pairwise_cutoff(symbols_dict[element[0]],
+                                                  symbols_dict[element[1]],
+                                                  element[2])
             pipeline.modifiers.append(bondsmodifier)
         pipeline.compute()
 
@@ -367,13 +398,19 @@ def write(atoms, filename, bond_specs=None, atom_style="molecular", size=(640, 4
             from ovito.vis import Viewport, TachyonRenderer, OpenGLRenderer
             pipeline.add_to_scene()
 
-            if viewport_type =="perspective":
-                vp = Viewport(type = Viewport.Type.Perspective, camera_dir = camera_dir)
-            elif viewport_type =="orthogonal":
-                vp = Viewport(type = Viewport.Type.Ortho, camera_dir = camera_dir)
+            if viewport_type == "perspective":
+                vp = Viewport(
+                    type=Viewport.Type.Perspective,
+                    camera_dir=camera_dir)
+            elif viewport_type == "orthogonal":
+                vp = Viewport(type=Viewport.Type.Ortho, camera_dir=camera_dir)
             else:
-                raise ValueError("viewport type has to be perspective or orthogonal")
+                raise ValueError(
+                    "viewport type has to be perspective or orthogonal")
 
             vp.zoom_all(size=size)
-            vp.render_image(filename=filename, size=size, renderer=TachyonRenderer())
+            vp.render_image(
+                filename=filename,
+                size=size,
+                renderer=TachyonRenderer())
             pipeline.remove_from_scene()

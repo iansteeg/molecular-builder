@@ -94,6 +94,35 @@ def create_bulk_crystal(name, size, round="up"):
     return myCrystal
 
 
+def create_bulk_ice(name, n_reps, density=0.9):
+    cwd = os.getcwd()
+    with tempfile.TemporaryDirectory() as tmp_dir:
+        os.chdir(tmp_dir)
+        sys.path.append(tmp_dir)
+
+        # Run genice input script
+        try:
+            genice_string = f"genice2 --rep {n_reps[0]} {n_reps[1]} {n_reps[2]} --dens {density} --format g --water physical_water --depol optimal {name} | sed '$d' | sed '$d' > ice.gro"
+            print(genice_string)
+            os.system(genice_string)
+        except:
+            raise OSError("packmol is not found. For installation instructions, \
+                           see http://m3g.iqm.unicamp.br/packmol/download.shtml.")
+
+        # Read packmol outfile
+        water = ase.io.read(f"ice.gro", format="gromacs")
+
+    os.chdir(cwd)
+    #if atoms is None:
+    #    water.set_cell(cell)
+    #else:
+    #    # remove solid
+    #    del water[:len(atoms)]
+    #    water.set_cell(cell)
+    #    atoms += water
+
+    return water
+
 def carve_geometry(atoms, geometry, side="in", return_carved=False):
     """Delete atoms according to geometry.
 
@@ -306,16 +335,7 @@ def pack_water(atoms=None, nummol=None, volume=None, density=0.997,
     return water
 
 
-def write(
-    atoms,
-    filename,
-    bond_specs=None,
-    atom_style="molecular",
-    size=(640, 480),
-        camera_dir=(2, 1, -1),
-        viewport_type="perspective",
-        atom_radii=None,
-        **ovito_export_file_kwargs):
+def write(atoms, filename, bond_specs=None, atom_style="molecular", size=(640, 480), camera_dir=(2, 1, -1), viewport_type="perspective", atom_radii=None, **ovito_export_file_kwargs):
     """Write atoms to lammps data file
 
     :param atoms: The atoms object to write to file
@@ -337,17 +357,17 @@ def write(
     # Using tempfile and write + read rather than ovito's ase_to_ovito and back because the
     # ordering of particle types for some (bug) reason becomes unpredictable
     with tempfile.TemporaryDirectory() as tmp_dir:
-        symbols = list(Formula(atoms.get_chemical_formula()).count().keys())
-        symbols_dict = {}
-        for i, symbol in enumerate(symbols):
-            symbols_dict[symbol] = i + 1
-        atoms.write(
-            os.path.join(
-                tmp_dir,
-                "tmp.data"),
-            format="lammps-data",
-            specorder=symbols,
-            atom_style='full')
+        if specorder is None: 
+            symbols = list(Formula(atoms.get_chemical_formula()).count().keys())
+            symbols_dict = {}
+            for i, symbol in enumerate(symbols):
+                symbols_dict[symbol] = i+1
+        else: 
+            symbols = specorder
+            symbols_dict = {}
+            for i, symbol in enumerate(symbols):
+                symbols_dict[symbol] = i+1
+        atoms.write(os.path.join(tmp_dir, "tmp.data"), format="lammps-data", specorder = symbols, atom_style='full')
 
         from ovito.io import import_file, export_file
         from ovito.modifiers import CreateBondsModifier

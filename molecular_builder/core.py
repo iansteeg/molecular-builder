@@ -335,7 +335,7 @@ def pack_water(atoms=None, nummol=None, volume=None, density=0.997,
     return water
 
 
-def write(atoms, filename, bond_specs=None, atom_style="molecular", size=(640, 480), camera_dir=(2, 1, -1), viewport_type="perspective", atom_radii=None, **ovito_export_file_kwargs):
+def write(atoms, filename, bond_specs=None, atom_style="molecular", size=(640, 480), camera_dir=(2, 1, -1), viewport_type="perspective", atom_radii=None, specorder=None, **ovito_export_file_kwargs):
     """Write atoms to lammps data file
 
     :param atoms: The atoms object to write to file

@@ -381,15 +381,15 @@ def write(atoms, filename, bond_specs=None, atom_style="molecular", size=(640, 4
                 "tmp.data"),
             atom_style='full')
 
-        types = pipeline.source.data.particles_.particle_types
+        types = pipeline.source.data.particles_.particle_types_
         for symbol, i in symbols_dict.items():
-            types.type_by_id(i).name = symbol
-            types.type_by_id(i).load_defaults()
+            types.type_by_id_(i).name = symbol
+            types.type_by_id_(i).load_defaults()
 
         if atom_radii is not None:
             types = pipeline.source.data.particles.particle_types
             for pair in atom_radii:
-                types.type_by_id(symbols_dict[pair[0]]).radius = pair[1]
+                types.type_by_id_(symbols_dict[pair[0]]).radius = pair[1]
 
         # Accept a single tuple not contained in a list if there is only one
         # bond type.

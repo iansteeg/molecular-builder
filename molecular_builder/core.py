@@ -323,8 +323,19 @@ def pack_water(atoms=None, nummol=None, volume=None, density=0.997,
                 "packmol is not found. For installation instructions, \
                            see http://m3g.iqm.unicamp.br/packmol/download.shtml.")
 
-        # Read packmol outfile
-        water = ase.io.read(f"out.{format_s}", format=format_v)
+        # sometimes packmol generates corrupted files which will raise 
+        # an ValueError when reading with ase. Because in case of an 
+        # error the the current working directory is not reset nothing 
+        # will work anymore (in jupyter notebooks). Catching the error 
+        # and properly setting the working directory solved the problem.
+        # In case of an error, dump the file.
+        try:
+            # Read packmol outfile
+            water = ase.io.read(f"out.{format_s}", format=format_v)
+        except ValueError as e:
+            copyfile(f"out.{format_s}", os.path.join(cwd,f"error_dump.{format_s}"))
+            os.chdir(cwd) 
+            raise e
 
     os.chdir(cwd)
     if atoms is None:

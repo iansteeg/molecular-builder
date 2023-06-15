@@ -403,13 +403,13 @@ class PlaneGeometry(Geometry):
         elif side == "outside":
             side = "below"
 
-        ds = np.einsum('ij,ij->j', self.point, self.normal)
+        ds = np.einsum('ij,ij->i', self.point, self.normal)
 
         structure = "structure water.pdb\n"
         structure += f"  number {number}\n"
         for plane in range(len(self.normal)):
-            a, b, c = self.normal[side]
-            d = ds[side]
+            a, b, c = self.normal[plane]
+            d = ds[plane]
             structure += f"  {side} plane {a} {b} {c} {d} \n"
         structure += "end structure\n"
         return structure

@@ -3,3 +3,5 @@
 *.pyc
 docs/_build
 .python-version
+molecular_builder.egg-info
+build/

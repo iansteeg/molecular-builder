@@ -216,7 +216,8 @@ def read_data(filename, type_mapping=None, style="atomic"):
     return atoms
 
 def pack_water(atoms=None, nummol=None, volume=None, density=0.997,
-               geometry=None, side='in', pbc=0.0, tolerance=2.0, random_seed=-1, water_data=None):
+               geometry=None, side='in', pbc=0.0, tolerance=2.0,
+               random_seed=-1, water_data=None):
     """Pack water molecules into voids at a given volume defined by a geometry.
     The packing is performed by packmol.
 
@@ -374,11 +375,7 @@ def write(atoms, filename, bond_specs=None, atom_style="molecular", size=(640, 4
         from ovito.io import import_file, export_file
         from ovito.modifiers import CreateBondsModifier
 
-        pipeline = import_file(
-            os.path.join(
-                tmp_dir,
-                "tmp.data"),
-            atom_style='full')
+        pipeline = import_file(os.path.join(tmp_dir, "tmp.data"), atom_style='full')
 
         types = pipeline.source.data.particles_.particle_types_
         for symbol, i in symbols_dict.items():
@@ -404,11 +401,7 @@ def write(atoms, filename, bond_specs=None, atom_style="molecular", size=(640, 4
         pipeline.compute()
 
         if suffix == ".data":
-            export_file(pipeline,
-                        filename,
-                        "lammps/data",
-                        atom_style=atom_style,
-                        **ovito_export_file_kwargs)
+            export_file(pipeline, filename, "lammps/data", atom_style=atom_style, **ovito_export_file_kwargs)
 
         elif suffix == ".png":
 

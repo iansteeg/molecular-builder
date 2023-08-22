@@ -130,13 +130,13 @@ class Geometry:
         # declare arrays to allow mathematical operations
         center, length = np.asarray(center), np.asarray(length)
         lo_corner, hi_corner = np.asarray(lo_corner), np.asarray(hi_corner)
-        relations = [["lo_corner", "hi_corner - length",
-                      "center - length / 2", "2 * center - hi_corner"],
-                     ["hi_corner", "lo_corner + length",
-                      "center + length / 2", "2 * center - lo_corner"],
-                     ["length / 2", "(hi_corner - lo_corner) / 2",
-                      "hi_corner - center", "center - lo_corner"],
-                     ["center", "(hi_corner + lo_corner) / 2",
+        relations = [["lo_corner",              "hi_corner - length",
+                      "center - length / 2",    "2 * center - hi_corner"],
+                     ["hi_corner",              "lo_corner + length",
+                      "center + length / 2",    "2 * center - lo_corner"],
+                     ["length / 2",             "(hi_corner - lo_corner) / 2",
+                      "hi_corner - center",     "center - lo_corner"],
+                     ["center",                 "(hi_corner + lo_corner) / 2",
                       "hi_corner - length / 2", "lo_corner + length / 2"]]
 
         # compute all relations
@@ -181,7 +181,6 @@ class PlaneBoundTriclinicGeometry(Geometry):
     :param pbc: shift of boundaries to be used with periodic boundary condition
     :type pbc: float
     """
-
     def __init__(self, cell, pbc=0.0):
         self.planes = self.cell2planes(cell, pbc)
         self.cell = cell
@@ -237,7 +236,7 @@ class SphereGeometry(Geometry):
         atoms.append(Atom(position=self.center))
         tmp_pbc = atoms.get_pbc()
         atoms.set_pbc(self.periodic_boundary_condition)
-        distances = atoms.get_distances(-1, list(range(len(atoms) - 1)),
+        distances = atoms.get_distances(-1, list(range(len(atoms)-1)),
                                         mic=self.minimum_image_convention)
         atoms.pop()
         atoms.set_pbc(tmp_pbc)
@@ -289,11 +288,10 @@ class BoxGeometry(Geometry):
     def __init__(self, center=None, length=None, lo_corner=None,
                  hi_corner=None, **kwargs):
         super().__init__(**kwargs)
-        props = self.extract_box_properties(
-            center, length, lo_corner, hi_corner)
+        props = self.extract_box_properties(center, length, lo_corner, hi_corner)
         self.ll_corner, self.ur_corner, self.length_half, self.center = props
         self.params = list(self.ll_corner) + list(self.ur_corner)
-        self.length = self.length_half * 2
+        self.length = self.length_half*2
 
     def __repr__(self):
         return 'box'
@@ -417,9 +415,7 @@ class PlaneGeometry(Geometry):
     def __call__(self, atoms):
         positions = atoms.get_positions()
         dist = self.point[:, np.newaxis] - positions
-        indices = np.all(
-            np.einsum('ijk,ik->ij', dist, self.normal) > 0,
-            axis=0)
+        indices = np.all(np.einsum('ijk,ik->ij', dist, self.normal) > 0, axis=0)
         return indices
 
 
@@ -490,7 +486,7 @@ class BerkovichGeometry(Geometry):
 
     def __call__(self, atoms):
         positions = atoms.get_positions()
-        rel_pos = positions - self.tip
+        rel_pos = positions-self.tip
         is_inside_candidate1 = np.dot(rel_pos, self.plane_directions[0]) > 0
         is_inside_candidate2 = np.dot(rel_pos, self.plane_directions[1]) > 0
         is_inside_candidate3 = np.dot(rel_pos, self.plane_directions[2]) > 0
@@ -658,8 +654,8 @@ class ProceduralSurfaceGeometry(Geometry):
             # choose indices to be used in coordinate transformation
             k, l = np.delete(ind, np.argmax(normal))
             # transform space coordinates onto structure surface
-            xs = point_plane[i, :, k] * (1 - normal[k]**2)**(-1 / 2)
-            ys = point_plane[i, :, l] * (1 - normal[l]**2)**(-1 / 2)
+            xs = point_plane[i, :, k]*(1-normal[k]**2)**(-1/2)
+            ys = point_plane[i, :, l]*(1-normal[l]**2)**(-1/2)
             if isinstance(self.repeat, bool):
                 # find length of surface
                 lx = np.max(xs) - np.min(xs)
@@ -671,8 +667,8 @@ class ProceduralSurfaceGeometry(Geometry):
                 # self.repeat is float
                 lx = ly = self.repeat
             # scale coordinates with length of surface
-            xs_scale = self.scale * xs / lx
-            ys_scale = self.scale * ys / ly
+            xs_scale = self.scale * xs/lx
+            ys_scale = self.scale * ys/ly
             # transform from orthorhombic cell to triclinic cell
             xs_scale += ys_scale * np.cos(np.deg2rad(self.angle))
             for j, point in enumerate(point_plane[i]):
@@ -691,7 +687,6 @@ class ProceduralSurfaceGeometry(Geometry):
         indices = np.all(dist < noises, axis=0)
         return ~indices
 
-
 class OctahedronGeometry(PlaneGeometry):
     """A rectangular octahedron geometry to be used for silicon carbide (SiC)
     All sides are assumed to have a normal vector pointing where are components
@@ -702,7 +697,6 @@ class OctahedronGeometry(PlaneGeometry):
     :param center: center of octahedron
     :type center: array_like
     """
-
     def __init__(self, d, center=[0, 0, 0]):
         # make list of normal vectors
         bin_list = []
@@ -727,7 +721,6 @@ class DodecahedronGeometry(PlaneGeometry):
     :param center: center of dodecahedron
     :type center: array_like
     """
-
     def __init__(self, d, center=[0, 0, 0]):
         # make list of normal vectors
         lst = [[+1, +1, 0], [+1, 0, +1], [0, +1, +1], [+1, -1, 0],
@@ -739,7 +732,6 @@ class DodecahedronGeometry(PlaneGeometry):
         # find points in planes
         points = d * normals + np.asarray(center)
         super().__init__(points, normals)
-
 
 class NotchGeometry(Geometry):
     """Carve out a notch geometry in a structure
@@ -756,35 +748,30 @@ class NotchGeometry(Geometry):
         self.entry = np.asarray(entry)
         self.vector_in = np.asarray(vector_in)
         self.vector_up = np.asarray(vector_up)
-        self.tip = self.entry + self.vector_in
+        self.tip = self.entry+self.vector_in
 
         p1 = self.entry + self.vector_up
         p2 = self.entry + self.vector_in
         p3 = p2 + np.cross(self.vector_in, self.vector_up)
-        self.normal_upper = np.cross(p3 - p1, p2 - p1)
+        self.normal_upper = np.cross(p3-p1, p2-p1)
 
         p1 = self.entry - self.vector_up
         p2 = self.entry + self.vector_in
         p3 = p2 + np.cross(self.vector_in, -self.vector_up)
-        self.normal_lower = np.cross(p3 - p1, p2 - p1)
+        self.normal_lower  = np.cross(p3-p1, p2-p1)
 
     def __repr__(self):
         return 'crack'
 
     def __call__(self, atoms):
         position = atoms.get_positions()
-        dist = self.entry - position
+        dist = self.entry-position
         is_inside1 = np.dot(dist, self.vector_in) > 0
-        dist = self.tip - position
+        dist = self.tip-position
         is_inside2 = np.dot(dist, self.normal_upper) < 0
         is_inside3 = np.dot(dist, self.normal_lower) < 0
 
-        indicies = np.logical_not(
-            np.logical_and(
-                np.logical_not(is_inside1),
-                np.logical_or(
-                    is_inside2,
-                    is_inside3)))
+        indicies = np.logical_not(np.logical_and(np.logical_not(is_inside1), np.logical_or(is_inside2, is_inside3)))
 
         return indicies
 

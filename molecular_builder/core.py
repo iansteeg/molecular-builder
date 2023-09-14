@@ -12,6 +12,7 @@ import tempfile
 from shutil import copyfile
 from clint.textui import progress
 from werkzeug.utils import secure_filename
+from subprocess import run, CalledProcessError
 
 
 def create_bulk_crystal(name, size, round="up"):
@@ -305,12 +306,21 @@ def pack_water(atoms=None, nummol=None, volume=None, density=0.997,
                 f.write("end structure\n\n")
             f.write(geometry.packmol_structure(nummol, side))
 
-        # Run packmol input script
+        # Run packmol input script and reset wd if an error occurs, 
+        # otherwise the wd remains the temporary directory which will 
+        # break things (especially in jupyter notebooks)
         try:
-            os.system("packmol < input.inp")
-        except:
+            with open('input.inp', 'r') as f:
+                process = run(['packmol'], stdin=f, check=True, capture_output=True)
+        except OSError:
             raise OSError("packmol is not found. For installation instructions, \
                            see http://m3g.iqm.unicamp.br/packmol/download.shtml.")
+        except CalledProcessError as e:
+            os.chdir(cwd)
+            print(e.stdout.decode())
+            print(e.stderr.decode())
+            raise e
+
 
         # sometimes packmol generates corrupted files which will raise 
         # an ValueError when reading with ase. Because in case of an 

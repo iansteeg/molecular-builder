@@ -306,34 +306,40 @@ def pack_water(atoms=None, nummol=None, volume=None, density=0.997,
                 f.write("end structure\n\n")
             f.write(geometry.packmol_structure(nummol, side))
 
-        # Run packmol input script and reset wd if an error occurs, 
-        # otherwise the wd remains the temporary directory which will 
+        # Run packmol input script and reset wd if an error occurs,
+        # otherwise the wd remains the temporary directory which will
         # break things (especially in jupyter notebooks)
         try:
             with open('input.inp', 'r') as f:
-                process = run(['packmol'], stdin=f, check=True, capture_output=True)
-        except OSError:
-            raise OSError("packmol is not found. For installation instructions, \
+                # do not capture output so progress can be seen in the output
+                process = run(['packmol'], stdin=f)   
+                process.check_returncode()
+        except FileNotFoundError:
+            FileNotFoundError(
+                "packmol is not found. For installation instructions, \
                            see http://m3g.iqm.unicamp.br/packmol/download.shtml.")
         except CalledProcessError as e:
             os.chdir(cwd)
-            print(e.stdout.decode())
-            print(e.stderr.decode())
-            raise e
+            if process.returncode == 173:
+                print('packmol returncode not zero, this might indicate '
+                      'non-perfect packing. Check the ouput.')
+            else:
+                raise e
 
-
-        # sometimes packmol generates corrupted files which will raise 
-        # an ValueError when reading with ase. Because in case of an 
-        # error the the current working directory is not reset nothing 
-        # will work anymore (in jupyter notebooks). Catching the error 
+        # sometimes packmol generates corrupted files which will raise
+        # an ValueError when reading with ase. Because in case of an
+        # error the the current working directory is not reset nothing
+        # will work anymore (in jupyter notebooks). Catching the error
         # and properly setting the working directory solved the problem.
         # In case of an error, dump the file.
         try:
             # Read packmol outfile
             water = ase.io.read(f"out.{format_s}", format=format_v)
         except ValueError as e:
-            copyfile(f"out.{format_s}", os.path.join(cwd,f"error_dump.{format_s}"))
-            os.chdir(cwd) 
+            copyfile(
+                f"out.{format_s}", os.path.join(
+                    cwd, f"error_dump.{format_s}"))
+            os.chdir(cwd)
             raise e
 
     os.chdir(cwd)

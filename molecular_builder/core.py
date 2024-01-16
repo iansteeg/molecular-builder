@@ -18,6 +18,11 @@ from werkzeug.utils import secure_filename
 def create_bulk_crystal(name, size, round="up"):
     """Create a bulk crystal from a spacegroup description.
 
+    If a file `crystals.py` is found in the local directory it gets 
+    imported. The file should have the same structure as the internal
+    `crystals.py` document. This file takes precendence over the internal
+    data base.
+
     :param name: name of the crystal. A list can be found by @TODO
     :type name: str
     :param size: size of the bulk crystal. In the case of a triclinic cell, the dimensions are the ones along the diagonal of the cell matrix, and the crystal tilt decides the rest.
@@ -26,6 +31,13 @@ def create_bulk_crystal(name, size, round="up"):
     :return: ase.Atoms object containing the crystal
     :rtype: ase.Atoms
     """
+    # load local crystal definitions (overwrites defaults)
+    try:
+        from crystals import crystals as mycrystals
+        crystals.update(mycrystals)
+    except ImportError:
+        pass
+
     crystal = crystals[name]
     a, b, c, alpha, beta, gamma = [crystal[i] for i in ["a", "b", "c", "alpha", "beta", "gamma"]]
     lx, ly, lz = size[0], size[1], size[2]

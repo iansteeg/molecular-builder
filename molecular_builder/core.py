@@ -203,7 +203,7 @@ def read_data(filename, type_mapping=None, style="atomic"):
     return atoms
 
 def pack_water(atoms=None, nummol=None, volume=None, density=0.997,
-               geometry=None, side='in', pbc=0.0, tolerance=2.0):
+               geometry=None, side='in', pbc=0.0, tolerance=2.0, random_seed=-1):
     """Pack water molecules into voids at a given volume defined by a geometry.
     The packing is performed by packmol.
 
@@ -223,6 +223,8 @@ def pack_water(atoms=None, nummol=None, volume=None, density=0.997,
     :type pbc: float or array_like
     :param tolerance: Minimum separation distance between molecules.
     :type tolerance: float
+    :param random_seed: random seed for packmol; see packmol documentation
+    :type random_seed: int
 
     :returns: Coordinates of the packed water
     """
@@ -275,6 +277,7 @@ def pack_water(atoms=None, nummol=None, volume=None, density=0.997,
             f.write(f"tolerance {tolerance}\n")
             f.write(f"filetype {format_s}\n")
             f.write(f"output out.{format_s}\n")
+            f.write(f'seed {random_seed}\n')
             if atoms is not None and len(atoms) > 0:
                 f.write(f"structure atoms.{format_s}\n")
                 f.write("  number 1\n")

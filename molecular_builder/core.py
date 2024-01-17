@@ -311,7 +311,7 @@ def pack_water(atoms=None, nummol=None, volume=None, density=0.997,
     return water
 
 
-def write(atoms, filename, bond_specs=None, atom_style="molecular", size=(640, 480), camera_dir=(2, 1, -1), viewport_type="perspective", atom_radii=None, specorder=None):
+def write(atoms, filename, bond_specs=None, atom_style="molecular", size=(640, 480), camera_dir=(2, 1, -1), viewport_type="perspective", atom_radii=None, specorder=None, **ovito_export_file_kwargs):
     """Write atoms to lammps data file
 
     :param atoms: The atoms object to write to file
@@ -343,12 +343,12 @@ def write(atoms, filename, bond_specs=None, atom_style="molecular", size=(640, 4
             symbols_dict = {}
             for i, symbol in enumerate(symbols):
                 symbols_dict[symbol] = i+1
-        atoms.write(os.path.join(tmp_dir, "tmp.data"), format="lammps-data", specorder = symbols)
+        atoms.write(os.path.join(tmp_dir, "tmp.data"), format="lammps-data", specorder = symbols, atom_style = 'full')
 
         from ovito.io import import_file, export_file
         from ovito.modifiers import CreateBondsModifier
 
-        pipeline = import_file(os.path.join(tmp_dir, "tmp.data"))
+        pipeline = import_file(os.path.join(tmp_dir, "tmp.data", atom_style = 'full'))
 
         types = pipeline.source.data.particles_.particle_types_
         for symbol, i in symbols_dict.items():
@@ -374,7 +374,7 @@ def write(atoms, filename, bond_specs=None, atom_style="molecular", size=(640, 4
         pipeline.compute()
 
         if suffix == ".data":
-            export_file(pipeline, filename, "lammps/data", atom_style=atom_style)
+            export_file(pipeline, filename, "lammps/data", atom_style=atom_style,**ovito_export_file_kwargs)
 
         elif suffix == ".png":
 

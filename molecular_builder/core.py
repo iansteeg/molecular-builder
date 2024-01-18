@@ -357,7 +357,7 @@ def write(atoms, filename, bond_specs=None, atom_style="molecular", size=(640, 4
         from ovito.io import import_file, export_file
         from ovito.modifiers import CreateBondsModifier
 
-        pipeline = import_file(os.path.join(tmp_dir, "tmp.data", atom_style = 'full'))
+        pipeline = import_file(os.path.join(tmp_dir, "tmp.data",), atom_style = 'full')
 
         types = pipeline.source.data.particles_.particle_types_
         for symbol, i in symbols_dict.items():

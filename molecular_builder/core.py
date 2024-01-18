@@ -203,7 +203,8 @@ def read_data(filename, type_mapping=None, style="atomic"):
     return atoms
 
 def pack_water(atoms=None, nummol=None, volume=None, density=0.997,
-               geometry=None, side='in', pbc=0.0, tolerance=2.0, random_seed=-1):
+               geometry=None, side='in', pbc=0.0, tolerance=2.0,
+               random_seed=-1, water_data=None):
     """Pack water molecules into voids at a given volume defined by a geometry.
     The packing is performed by packmol.
 
@@ -225,6 +226,8 @@ def pack_water(atoms=None, nummol=None, volume=None, density=0.997,
     :type tolerance: float
     :param random_seed: random seed for packmol; see packmol documentation
     :type random_seed: int
+    :param water_data: path to pdb coordinate file containing the packing molecule, this does not not need to be water; if `None` use water (ships with molecular-builder)
+    :type water_data: str
 
     :returns: Coordinates of the packed water
     """
@@ -269,7 +272,10 @@ def pack_water(atoms=None, nummol=None, volume=None, density=0.997,
 
         # Copy water.pdb to temporary directory
         this_dir, this_filename = os.path.split(__file__)
-        water_data = this_dir + f"/data_files/water.{format_s}"
+        if water_data:
+            water_data = os.path.join(cwd, water_data)
+        else:
+            water_data = this_dir + f"/data_files/water.{format_s}"
         copyfile(water_data, f"water.{format_s}")
 
         # Generate packmol input script
